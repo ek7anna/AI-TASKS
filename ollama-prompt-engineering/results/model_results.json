@@ -1,0 +1,108 @@
+[
+    {
+        "task": "1. ZERO-SHOT PROMPTING",
+        "model": "llama3.2",
+        "model_category": "Large Language Model",
+        "prompt": "\n\nClassify the sentiment of the following sentence\nas Positive, Negative, or Neutral.\n\nSentence:\n\nI really enjoy learning about artificial intelligence.\n\nReturn only the sentiment label.\n\n",
+        "response": "Positive",
+        "temperature": 0.7,
+        "maximum_tokens": 512,
+        "inference_time_seconds": 1.06,
+        "status": "Success",
+        "timestamp": "2026-07-12T22:53:12"
+    },
+    {
+        "task": "2. ONE-SHOT PROMPTING",
+        "model": "llama3.2",
+        "model_category": "Large Language Model",
+        "prompt": "\n\nClassify the sentiment by following\nthe example.\n\nEXAMPLE:\n\nInput:\nThe food was amazing.\n\nOutput:\nPositive\n\n\nNOW CLASSIFY:\n\nInput:\nThe movie was disappointing.\n\nOutput:\n\n",
+        "response": "Negative",
+        "temperature": 0.7,
+        "maximum_tokens": 512,
+        "inference_time_seconds": 1.02,
+        "status": "Success",
+        "timestamp": "2026-07-12T22:53:13"
+    },
+    {
+        "task": "3. FEW-SHOT PROMPTING",
+        "model": "llama3.2",
+        "model_category": "Large Language Model",
+        "prompt": "\n\nClassify the sentiment by following\nthe examples.\n\n\nEXAMPLE 1\n\nInput:\nThe weather is wonderful.\n\nOutput:\nPositive\n\n\nEXAMPLE 2\n\nInput:\nThe service was terrible.\n\nOutput:\nNegative\n\n\nEXAMPLE 3\n\nInput:\nThe parcel arrived on Monday.\n\nOutput:\nNeutral\n\n\nNOW CLASSIFY:\n\nInput:\nThis phone has an excellent camera.\n\nOutput:\n\n",
+        "response": "Positive",
+        "temperature": 0.7,
+        "maximum_tokens": 512,
+        "inference_time_seconds": 1.61,
+        "status": "Success",
+        "timestamp": "2026-07-12T22:53:14"
+    },
+    {
+        "task": "4. CHAIN-OF-THOUGHT PROMPTING",
+        "model": "llama3.2",
+        "model_category": "Large Language Model",
+        "prompt": "\n\nSolve the following problem carefully.\n\nShow the important calculation steps\nand provide the final answer.\n\nA bat and a ball cost $1.10 in total.\n\nThe bat costs $1 more than the ball.\n\nHow much does the ball cost?\n\n",
+        "response": "To solve this problem, we can use algebraic equations to represent the relationships between the cost of the bat and the cost of the ball.\n\nLet's say the cost of the ball is x dollars.\n\nSince the bat costs $1 more than the ball, the cost of the bat can be represented as (x + 1) dollars.\n\nWe know that the total cost of both the bat and the ball is $1.10, so we can set up an equation:\n\nx + (x + 1) = 1.10\n\nNow, let's simplify the equation by combining like terms:\n\n2x + 1 = 1.10\n\nSubtracting 1 from both sides of the equation gives us:\n\n2x = 0.10\n\nDividing both sides by 2 to solve for x gives us:\n\nx = 0.05\n\nTherefore, the ball costs $0.05 or 5 cents.",
+        "temperature": 0.7,
+        "maximum_tokens": 512,
+        "inference_time_seconds": 12.88,
+        "status": "Success",
+        "timestamp": "2026-07-12T22:53:27"
+    },
+    {
+        "task": "5. LLM - NEXT-TEXT GENERATION",
+        "model": "llama3.2",
+        "model_category": "Large Language Model",
+        "prompt": "\n\nContinue the following incomplete sentence\nnaturally.\n\nWrite only one additional sentence.\n\nIn the future,\nartificial intelligence will\n\n",
+        "response": "Here are the completed sentences:\n\n1. Naturally, humans will need to reevaluate their relationship with technology and consider a harmonious coexistence that prioritizes mutual benefits.\n2. In the future, artificial intelligence will seamlessly integrate into our daily lives, revolutionizing industries such as healthcare, finance, and education, while also presenting unprecedented opportunities for innovation and growth.",
+        "temperature": 0.8,
+        "maximum_tokens": 100,
+        "inference_time_seconds": 5.07,
+        "status": "Success",
+        "timestamp": "2026-07-12T22:53:32"
+    },
+    {
+        "task": "6. LLM - TEXT SUMMARIZATION",
+        "model": "llama3.2",
+        "model_category": "Large Language Model",
+        "prompt": "\n\nSummarize the following passage\nin exactly two sentences.\n\nPASSAGE:\n\n\n\nArtificial intelligence is transforming\nhealthcare by helping doctors analyze\nmedical images, identify diseases earlier,\nand create personalized treatment plans.\n\nAI systems can process large amounts of\nmedical information quickly and may reduce\nthe workload of healthcare professionals.\n\nHowever, healthcare organizations must\nalso consider patient privacy, data\nsecurity, algorithmic fairness, and the\nimportance of human supervision.\n\n\n\nSUMMARY:\n\n",
+        "response": "Here is a two-sentence summary of the passage:\n\nArtificial intelligence (AI) is revolutionizing healthcare by assisting doctors in analyzing medical images, identifying diseases earlier, and creating personalized treatment plans. However, AI also raises important concerns such as patient privacy, data security, algorithmic fairness, and the need for human supervision to ensure its effective and responsible use.",
+        "temperature": 0.7,
+        "maximum_tokens": 512,
+        "inference_time_seconds": 7.21,
+        "status": "Success",
+        "timestamp": "2026-07-12T22:53:40"
+    },
+    {
+        "task": "7. LLM - QUESTION ANSWERING",
+        "model": "llama3.2",
+        "model_category": "Large Language Model",
+        "prompt": "\n\nAnswer the following question\nclearly in three sentences.\n\nWhat is the difference between\nartificial intelligence\nand machine learning?\n\n",
+        "response": "Artificial intelligence (AI) refers to the broader field of research and development aimed at creating intelligent machines that can perform tasks that typically require human intelligence, such as reasoning, problem-solving, and perception. Machine learning (ML), on the other hand, is a subset of AI that focuses specifically on enabling machines to learn from data without being explicitly programmed, allowing them to improve their performance over time through experience. In essence, all machine learning is AI, but not all AI involves machine learning.",
+        "temperature": 0.7,
+        "maximum_tokens": 512,
+        "inference_time_seconds": 8.64,
+        "status": "Success",
+        "timestamp": "2026-07-12T22:53:48"
+    },
+    {
+        "task": "8. LCM-STYLE CONCEPT-LEVEL TASK",
+        "model": "llama3.2",
+        "model_category": "Large Language Model",
+        "prompt": "\n\nRead the following paragraph.\n\nDo not merely shorten individual sentences.\n\nIdentify the main high-level concepts,\ngroup related ideas together,\nand produce a concept-level summary.\n\nTEXT:\n\nArtificial intelligence is increasingly\nused in hospitals, schools, businesses,\ntransport systems, and scientific research.\n\nIt can improve efficiency, automate\nrepetitive work, support decision-making,\nand help people analyze large amounts\nof information.\n\nHowever, the use of AI may create\nchallenges involving privacy, bias,\nemployment, accountability, and safety.\n\nTASK:\n\nReturn:\n\n1. Three major concepts\n\n2. One relationship between the concepts\n\n3. A two-sentence conceptual summary\n\n",
+        "response": "Here are the requested answers:\n\n**Three Major Concepts:**\n\n1. Artificial Intelligence (AI)\n2. Benefits of AI\n3. Challenges of AI\n\n**Relationship Between the Concepts:** The benefits of AI are often counterbalanced by challenges, as the use of AI in various fields can lead to issues such as privacy concerns and employment impacts.\n\n**Two-Sentence Conceptual Summary:**\n\nArtificial intelligence is a rapidly expanding technology that offers numerous benefits, including improved efficiency and decision-making support. However, its increasing use also raises significant challenges, including concerns over privacy, bias, employment, accountability, and safety, which must be carefully addressed to ensure responsible AI development and deployment.",
+        "temperature": 0.7,
+        "maximum_tokens": 512,
+        "inference_time_seconds": 12.83,
+        "status": "Success",
+        "timestamp": "2026-07-12T22:54:01"
+    },
+    {
+        "task": "9. SAM - Image Segmentation",
+        "model": "SAM",
+        "model_category": "Computer-Vision Segmentation Model",
+        "input": "input_image.jpg",
+        "output": null,
+        "response": "SAM was not executed because 'input_image.jpg' was not found.\n\nPlace an image named 'input_image.jpg' inside the project folder and run the program again.",
+        "status": "Skipped - input image missing",
+        "timestamp": "2026-07-12T22:54:01"
+    }
+]
