@@ -1,30 +1,48 @@
 """
-AI MODEL INFERENCE AND PROMPT ENGINEERING USING OLLAMA
+============================================================
+PROMPT ENGINEERING AND MULTI-MODEL INFERENCE USING OLLAMA
+============================================================
 
 Student: Eilene Anna Kuriakose
 
-Covers:
-1. Ollama implementation
-2. Installed-model listing
-3. Zero-shot prompting
-4. One-shot prompting
-5. Few-shot prompting
-6. Chain-of-thought prompting
-7. LLM next-text generation
-8. LLM summarization
-9. LLM question answering
-10. LCM-style concept-level processing
-11. Actual SAM image segmentation
-12. Inference-time measurement
-13. JSON and TXT result saving
+Models used:
+
+1. LLM - Large Language Model
+   Model: Llama 3.2
+   Tasks:
+   - Zero-shot prompting
+   - One-shot prompting
+   - Few-shot prompting
+   - Chain-of-thought prompting
+   - Text summarization
+   - Question answering
+
+2. SLM - Small Language Model
+   Model: Qwen2.5 0.5B
+   Tasks:
+   - Next-text generation
+   - Short-text summarization
+
+3. VLM - Vision-Language Model
+   Model: Moondream
+   Task:
+   - Image understanding
+
+The program also:
+
+- Lists locally installed Ollama models
+- Calls actual models using Ollama
+- Runs inference
+- Measures inference time
+- Saves results as JSON
+- Saves results as TXT
+============================================================
 """
+
 
 # ============================================================
 # IMPORTS
 # ============================================================
-
-from ollama import chat
-from ollama import list as ollama_list
 
 from datetime import datetime
 from pathlib import Path
@@ -32,23 +50,38 @@ from pathlib import Path
 import json
 import time
 
+from ollama import chat
+from ollama import list as ollama_list
+
 
 # ============================================================
-# CONFIGURATION
+# MODEL CONFIGURATION
 # ============================================================
 
-OLLAMA_MODEL = "llama3.2"
+LLM_MODEL = "llama3.2"
 
-DEFAULT_TEMPERATURE = 0.7
-DEFAULT_MAX_TOKENS = 512
+SLM_MODEL = "qwen2.5:0.5b"
 
-RESULTS_FOLDER = Path("results")
+VLM_MODEL = "moondream"
+
+
+# ============================================================
+# FILE CONFIGURATION
+# ============================================================
+
+PROJECT_FOLDER = Path(__file__).resolve().parent
+INPUT_IMAGE = PROJECT_FOLDER / "test_image.jpg"
+
+RESULTS_FOLDER = PROJECT_FOLDER / "results"
 
 JSON_FILE = RESULTS_FOLDER / "model_results.json"
+
 TEXT_FILE = RESULTS_FOLDER / "model_results.txt"
 
-INPUT_IMAGE = Path("input_image.jpg")
-SAM_OUTPUT_IMAGE = RESULTS_FOLDER / "sam_segmented_output.png"
+
+# ============================================================
+# STORE ALL RESULTS
+# ============================================================
 
 all_results = []
 
@@ -60,8 +93,33 @@ all_results = []
 def print_header(title):
 
     print("\n" + "=" * 75)
+
     print(title.center(75))
+
     print("=" * 75)
+
+
+# ============================================================
+# GET RESPONSE CONTENT
+# ============================================================
+
+def get_response_content(response):
+
+    """
+    Extracts the generated text from
+    an Ollama response.
+    """
+
+    if hasattr(response, "message"):
+
+        message = response.message
+
+        if hasattr(message, "content"):
+
+            return message.content
+
+
+    return response["message"]["content"]
 
 
 # ============================================================
@@ -70,129 +128,293 @@ def print_header(title):
 
 def list_installed_models():
 
-    print_header("INSTALLED OLLAMA MODELS")
+    print_header(
+        "INSTALLED OLLAMA MODELS"
+    )
+
 
     try:
 
         response = ollama_list()
 
-        if hasattr(response, "models"):
+
+        if hasattr(
+            response,
+            "models"
+        ):
+
             models = response.models
+
         else:
-            models = response.get("models", [])
+
+            models = response.get(
+                "models",
+                []
+            )
+
 
         if not models:
 
-            print("No locally installed Ollama models were found.")
+            print(
+                "No locally installed "
+                "Ollama models were found."
+            )
 
             return
 
-        print("Models available locally:")
+
+        print(
+            "Models available locally:"
+        )
+
 
         for model in models:
 
-            if hasattr(model, "model"):
+            if hasattr(
+                model,
+                "model"
+            ):
 
                 model_name = model.model
 
-            elif isinstance(model, dict):
+
+            elif isinstance(
+                model,
+                dict
+            ):
 
                 model_name = model.get(
+
                     "model",
-                    model.get("name", "Unknown")
+
+                    model.get(
+                        "name",
+                        "Unknown"
+                    )
+
                 )
+
 
             else:
 
-                model_name = str(model)
+                model_name = str(
+                    model
+                )
 
-            print(f"- {model_name}")
+
+            print(
+                f"- {model_name}"
+            )
+
 
     except Exception as error:
 
-        print("Unable to list Ollama models.")
+        print(
+            "Unable to list "
+            "Ollama models."
+        )
 
-        print(f"Reason: {error}")
+        print(
+            f"Reason: {error}"
+        )
 
 
 # ============================================================
-# OLLAMA MODEL INFERENCE FUNCTION
+# GENERAL TEXT-MODEL INFERENCE FUNCTION
 # ============================================================
 
-def call_ollama_model(
+def call_text_model(
+
     task_name,
+
+    model_name,
+
+    model_type,
+
     prompt,
-    temperature=DEFAULT_TEMPERATURE,
-    max_tokens=DEFAULT_MAX_TOKENS
+
+    temperature=0.7,
+
+    max_tokens=512
+
 ):
 
-    print_header(task_name)
+    """
+    Calls an Ollama text model.
 
-    print(f"Model: {OLLAMA_MODEL}")
-    print(f"Temperature: {temperature}")
-    print(f"Maximum output tokens: {max_tokens}")
+    The function:
 
-    print("\nPROMPT:\n")
-    print(prompt)
+    1. Sends a prompt
+    2. Runs model inference
+    3. Displays the response
+    4. Measures inference time
+    5. Stores the result
+    """
 
-    print("\nMODEL RESPONSE:\n")
+
+    print_header(
+        task_name
+    )
+
+
+    print(
+        f"Model type: {model_type}"
+    )
+
+    print(
+        f"Model: {model_name}"
+    )
+
+    print(
+        f"Temperature: {temperature}"
+    )
+
+    print(
+        "Maximum output tokens: "
+        f"{max_tokens}"
+    )
+
+
+    print(
+        "\nPROMPT:\n"
+    )
+
+    print(
+        prompt.strip()
+    )
+
 
     start_time = time.perf_counter()
+
 
     try:
 
         response = chat(
-            model=OLLAMA_MODEL,
+
+            model=model_name,
+
             messages=[
+
                 {
+
                     "role": "user",
+
                     "content": prompt
+
                 }
+
             ],
+
             options={
-                "temperature": temperature,
-                "num_predict": max_tokens
+
+                "temperature":
+                    temperature,
+
+                "num_predict":
+                    max_tokens
+
             }
+
         )
 
-        answer = response["message"]["content"]
+
+        answer = get_response_content(
+            response
+        )
+
 
         status = "Success"
 
+
     except Exception as error:
 
-        answer = f"Model inference failed: {error}"
+        answer = (
+
+            "Model inference failed: "
+
+            f"{type(error).__name__}: "
+
+            f"{error}"
+
+        )
+
 
         status = "Failed"
 
-    inference_time = time.perf_counter() - start_time
 
-    print(answer)
+    inference_time = (
 
-    print(
-        f"\nInference time: "
-        f"{inference_time:.2f} seconds"
+        time.perf_counter()
+
+        - start_time
+
     )
 
-    all_results.append(
-        {
-            "task": task_name,
-            "model": OLLAMA_MODEL,
-            "model_category": "Large Language Model",
-            "prompt": prompt,
-            "response": answer,
-            "temperature": temperature,
-            "maximum_tokens": max_tokens,
-            "inference_time_seconds": round(
+
+    print(
+        "\nMODEL RESPONSE:\n"
+    )
+
+    print(
+        answer
+    )
+
+
+    print(
+
+        "\nInference time: "
+
+        f"{inference_time:.2f} seconds"
+
+    )
+
+
+    result = {
+
+        "task":
+            task_name,
+
+        "model_type":
+            model_type,
+
+        "model":
+            model_name,
+
+        "prompt":
+            prompt.strip(),
+
+        "response":
+            answer,
+
+        "temperature":
+            temperature,
+
+        "maximum_output_tokens":
+            max_tokens,
+
+        "inference_time_seconds":
+            round(
                 inference_time,
                 2
             ),
-            "status": status,
-            "timestamp": datetime.now().isoformat(
+
+        "status":
+            status,
+
+        "timestamp":
+            datetime.now().isoformat(
+
                 timespec="seconds"
+
             )
-        }
+
+    }
+
+
+    all_results.append(
+        result
     )
+
 
     return answer
 
@@ -203,19 +425,43 @@ def call_ollama_model(
 
 def zero_shot_prompting():
 
+    """
+    Zero-shot prompting:
+
+    The model performs the task
+    without receiving any examples.
+    """
+
+
     prompt = """
-Classify the sentiment of the following sentence
-as Positive, Negative, or Neutral.
+
+Classify the sentiment of the following
+sentence as Positive, Negative, or Neutral.
 
 Sentence:
-I really enjoy learning about artificial intelligence.
+
+I really enjoy learning about
+artificial intelligence.
 
 Return only the sentiment label.
+
 """
 
-    call_ollama_model(
-        "1. ZERO-SHOT PROMPTING",
-        prompt
+
+    call_text_model(
+
+        task_name=
+            "1. ZERO-SHOT PROMPTING",
+
+        model_name=
+            LLM_MODEL,
+
+        model_type=
+            "LLM - Large Language Model",
+
+        prompt=
+            prompt
+
     )
 
 
@@ -225,29 +471,56 @@ Return only the sentiment label.
 
 def one_shot_prompting():
 
+    """
+    One-shot prompting:
+
+    The model receives one example
+    before performing a new task.
+    """
+
+
     prompt = """
-Classify the sentiment by following the example.
+
+Classify the sentiment by following
+the example.
+
 
 EXAMPLE:
 
 Input:
+
 The food was amazing.
 
 Output:
+
 Positive
 
 
 NOW CLASSIFY:
 
 Input:
+
 The movie was disappointing.
 
 Output:
+
 """
 
-    call_ollama_model(
-        "2. ONE-SHOT PROMPTING",
-        prompt
+
+    call_text_model(
+
+        task_name=
+            "2. ONE-SHOT PROMPTING",
+
+        model_name=
+            LLM_MODEL,
+
+        model_type=
+            "LLM - Large Language Model",
+
+        prompt=
+            prompt
+
     )
 
 
@@ -257,47 +530,78 @@ Output:
 
 def few_shot_prompting():
 
-    prompt = """
-Classify the sentiment by following the examples.
+    """
+    Few-shot prompting:
 
-EXAMPLE 1
+    The model receives multiple examples
+    before performing a new task.
+    """
+
+
+    prompt = """
+
+Classify the sentiment by following
+the examples.
+
+
+EXAMPLE 1:
 
 Input:
+
 The weather is wonderful.
 
 Output:
+
 Positive
 
 
-EXAMPLE 2
+EXAMPLE 2:
 
 Input:
+
 The service was terrible.
 
 Output:
+
 Negative
 
 
-EXAMPLE 3
+EXAMPLE 3:
 
 Input:
+
 The parcel arrived on Monday.
 
 Output:
+
 Neutral
 
 
 NOW CLASSIFY:
 
 Input:
+
 This phone has an excellent camera.
 
 Output:
+
 """
 
-    call_ollama_model(
-        "3. FEW-SHOT PROMPTING",
-        prompt
+
+    call_text_model(
+
+        task_name=
+            "3. FEW-SHOT PROMPTING",
+
+        model_name=
+            LLM_MODEL,
+
+        model_type=
+            "LLM - Large Language Model",
+
+        prompt=
+            prompt
+
     )
 
 
@@ -307,7 +611,16 @@ Output:
 
 def chain_of_thought_prompting():
 
+    """
+    Chain-of-thought prompting:
+
+    The model solves a reasoning problem
+    using important calculation steps.
+    """
+
+
     prompt = """
+
 Solve the following problem carefully.
 
 Show the important calculation steps
@@ -318,43 +631,50 @@ A bat and a ball cost $1.10 in total.
 The bat costs $1 more than the ball.
 
 How much does the ball cost?
+
 """
 
-    call_ollama_model(
-        "4. CHAIN-OF-THOUGHT PROMPTING",
-        prompt
+
+    call_text_model(
+
+        task_name=
+            "4. CHAIN-OF-THOUGHT PROMPTING",
+
+        model_name=
+            LLM_MODEL,
+
+        model_type=
+            "LLM - Large Language Model",
+
+        prompt=
+            prompt
+
     )
 
 
 # ============================================================
-# 5. LLM - NEXT-TEXT GENERATION
+# 5. LLM - TEXT SUMMARIZATION
 # ============================================================
 
-def llm_next_text_generation():
+def llm_text_summarization():
 
-    prompt = """
-Complete the following sentence naturally.
+    """
+    Model category:
 
-Return only one completed sentence.
+    LLM - Large Language Model
 
-In the future, artificial intelligence will
-"""
+    Actual model:
 
-    call_ollama_model(
-        "5. LLM - NEXT-TEXT GENERATION",
-        prompt,
-        temperature=0.8,
-        max_tokens=100
-    )
+    Llama 3.2
+
+    Task:
+
+    Text summarization
+    """
 
 
-# ============================================================
-# 6. LLM - TEXT SUMMARIZATION
-# ============================================================
+    passage = """
 
-def llm_summarization():
-
-    article = """
 Artificial intelligence is transforming
 healthcare by helping doctors analyze
 medical images, identify diseases earlier,
@@ -368,581 +688,819 @@ However, healthcare organizations must
 also consider patient privacy, data
 security, algorithmic fairness, and the
 importance of human supervision.
+
 """
 
+
     prompt = f"""
+
 Summarize the following passage
 in exactly two sentences.
 
 PASSAGE:
 
-{article}
+{passage}
 
 SUMMARY:
+
 """
 
-    call_ollama_model(
-        "6. LLM - TEXT SUMMARIZATION",
-        prompt
+
+    call_text_model(
+
+        task_name=
+            "5. LLM - TEXT SUMMARIZATION",
+
+        model_name=
+            LLM_MODEL,
+
+        model_type=
+            "LLM - Large Language Model",
+
+        prompt=
+            prompt,
+
+        temperature=
+            0.5,
+
+        max_tokens=
+            200
+
     )
 
 
 # ============================================================
-# 7. LLM - QUESTION ANSWERING
+# 6. LLM - QUESTION ANSWERING
 # ============================================================
 
 def llm_question_answering():
 
+    """
+    LLM task:
+
+    Question answering
+    """
+
+
     prompt = """
+
 Answer the following question
 clearly in three sentences.
 
 What is the difference between
-artificial intelligence and machine learning?
+artificial intelligence
+and machine learning?
+
 """
 
-    call_ollama_model(
-        "7. LLM - QUESTION ANSWERING",
-        prompt
+
+    call_text_model(
+
+        task_name=
+            "6. LLM - QUESTION ANSWERING",
+
+        model_name=
+            LLM_MODEL,
+
+        model_type=
+            "LLM - Large Language Model",
+
+        prompt=
+            prompt,
+
+        temperature=
+            0.5,
+
+        max_tokens=
+            200
+
     )
 
 
 # ============================================================
-# 8. LCM-STYLE CONCEPT-LEVEL PROCESSING
+# 7. SLM - NEXT-TEXT GENERATION
 # ============================================================
 
-def lcm_concept_task():
+def slm_next_text_generation():
+
+    """
+    Model category:
+
+    SLM - Small Language Model
+
+    Actual model:
+
+    Qwen2.5 0.5B
+
+    Task:
+
+    Next-text generation
+    """
+
 
     prompt = """
-Perform concept-level processing on the text below.
 
-TEXT:
+Complete the following sentence naturally.
 
-Artificial intelligence is increasingly used
-in hospitals, schools, businesses, transport
-systems, and scientific research.
+Return only one completed sentence.
 
-AI can improve efficiency, automate repetitive
-work, support decisions, and analyze large
-amounts of information.
+In the future,
+artificial intelligence will
 
-However, AI can also create challenges involving
-privacy, bias, employment, accountability,
-and safety.
-
-Return:
-
-1. Three major concepts
-
-2. One relationship between the concepts
-
-3. A two-sentence conceptual summary
 """
 
-    call_ollama_model(
-        "8. LCM-STYLE CONCEPT-LEVEL TASK",
+
+    call_text_model(
+
+        task_name=
+            "7. SLM - NEXT-TEXT GENERATION",
+
+        model_name=
+            SLM_MODEL,
+
+        model_type=
+            "SLM - Small Language Model",
+
+        prompt=
+            prompt,
+
+        temperature=
+            0.7,
+
+        max_tokens=
+            100
+
+    )
+
+
+# ============================================================
+# 8. SLM - SHORT-TEXT SUMMARIZATION
+# ============================================================
+
+def slm_short_text_summarization():
+
+    """
+    SLM task:
+
+    Short-text summarization
+    """
+
+
+    prompt = """
+
+Summarize the following text
+in one sentence.
+
+Machine learning allows computer systems
+to identify patterns in data and improve
+their performance without being explicitly
+programmed for every possible situation.
+
+Return only the summary.
+
+"""
+
+
+    call_text_model(
+
+        task_name=
+            "8. SLM - SHORT-TEXT SUMMARIZATION",
+
+        model_name=
+            SLM_MODEL,
+
+        model_type=
+            "SLM - Small Language Model",
+
+        prompt=
+            prompt,
+
+        temperature=
+            0.4,
+
+        max_tokens=
+            100
+
+    )
+
+
+# ============================================================
+# 9. VLM - IMAGE UNDERSTANDING
+# ============================================================
+
+def vlm_image_understanding():
+
+    """
+    Model category:
+
+    VLM - Vision-Language Model
+
+    Actual model:
+
+    Moondream
+
+    Task:
+
+    Image understanding
+
+    Input:
+
+    input_image.jpg
+
+    Output:
+
+    Natural-language image description
+    """
+
+
+    task_name = (
+
+        "9. VLM - IMAGE UNDERSTANDING"
+
+    )
+
+
+    model_type = (
+
+        "VLM - Vision-Language Model"
+
+    )
+
+
+    prompt = (
+
+        "Describe the main subject and "
+
+        "important visible details in this image. "
+
+        "Answer in three clear sentences."
+
+    )
+
+
+    print_header(
+        task_name
+    )
+
+
+    print(
+        f"Model type: {model_type}"
+    )
+
+    print(
+        f"Model: {VLM_MODEL}"
+    )
+
+    print(
+        f"Input image: {INPUT_IMAGE.name}"
+    )
+
+
+    print(
+        "\nPROMPT:\n"
+    )
+
+    print(
         prompt
     )
 
-
-# ============================================================
-# 9. ACTUAL SAM IMAGE SEGMENTATION
-# ============================================================
-
-def run_sam_segmentation():
-
-    print_header("9. SAM - IMAGE SEGMENTATION")
-
-    print(
-        "Model: facebook/sam-vit-base"
-    )
-
-    print(
-        "Model category: "
-        "Computer-Vision Segmentation Model"
-    )
-
-    print(
-        "Task: Image segmentation"
-    )
 
     if not INPUT_IMAGE.exists():
 
-        message = (
-            "SAM was skipped because "
-            "'input_image.jpg' was not found.\n"
-            "Place input_image.jpg in the project folder "
-            "and run the program again."
+        answer = (
+
+            "VLM inference was skipped because "
+
+            "'input_image.jpg' was not found."
+
         )
 
-        print("\n" + message)
+
+        print(
+            "\nMODEL RESPONSE:\n"
+        )
+
+        print(
+            answer
+        )
+
 
         all_results.append(
+
             {
-                "task": "9. SAM - IMAGE SEGMENTATION",
-                "model": "facebook/sam-vit-base",
-                "model_category":
-                    "Computer-Vision Segmentation Model",
-                "input": str(INPUT_IMAGE),
-                "output": None,
-                "response": message,
-                "status": "Skipped - input image missing",
+
+                "task":
+                    task_name,
+
+                "model_type":
+                    model_type,
+
+                "model":
+                    VLM_MODEL,
+
+                "input_image":
+                    str(INPUT_IMAGE),
+
+                "prompt":
+                    prompt,
+
+                "response":
+                    answer,
+
+                "status":
+                    "Skipped - image missing",
+
                 "timestamp":
                     datetime.now().isoformat(
+
                         timespec="seconds"
+
                     )
+
             }
+
         )
 
-        return
+
+        return answer
+
 
     start_time = time.perf_counter()
 
+
     try:
 
-        import numpy as np
-        import torch
-
-        import matplotlib
-
-        matplotlib.use("Agg")
-
-        import matplotlib.pyplot as plt
-
-        from PIL import Image
-
-        from transformers import (
-            SamModel,
-            SamProcessor
-        )
-
         print(
-            "\nLoading the SAM processor..."
+            "\nRunning VLM inference..."
         )
 
-        sam_model_name = (
-            "facebook/sam-vit-base"
-        )
 
-        processor = (
-            SamProcessor.from_pretrained(
-                sam_model_name
-            )
-        )
+        response = chat(
 
-        print(
-            "Loading the SAM model..."
-        )
+            model=
+                VLM_MODEL,
 
-        sam_model = (
-            SamModel.from_pretrained(
-                sam_model_name
-            )
-        )
+            messages=[
 
-        device = (
-            "cuda"
-            if torch.cuda.is_available()
-            else "cpu"
-        )
+                {
 
-        sam_model.to(device)
+                    "role":
+                        "user",
 
-        sam_model.eval()
+                    "content":
+                        prompt,
 
-        print(
-            f"Device: {device}"
-        )
+                    "images":
 
-        print(
-            "Reading input image..."
-        )
+                        [
 
-        image = (
-            Image.open(INPUT_IMAGE)
-            .convert("RGB")
-        )
+                            str(
+                                INPUT_IMAGE
+                            )
 
-        original_size = image.size
+                        ]
 
-        # Resize the image correctly before SAM inference.
-        # This lowers memory usage on CPU.
-        image.thumbnail(
-            (512, 512)
-        )
+                }
 
-        print(
-            f"Original image size: "
-            f"{original_size}"
-        )
+            ],
 
-        print(
-            f"Image size used for SAM: "
-            f"{image.size}"
-        )
+            options={
 
-        width, height = image.size
+                "temperature":
+                    0.3,
 
-        # Use the center of the image
-        # as the point prompt for SAM.
-        input_points = [
-            [
-                [
-                    width // 2,
-                    height // 2
-                ]
-            ]
-        ]
+                "num_predict":
+                    300
 
-        print(
-            "Preparing SAM inputs..."
-        )
-
-        inputs = processor(
-            images=image,
-            input_points=input_points,
-            return_tensors="pt"
-        )
-
-        inputs = {
-            key: value.to(device)
-            for key, value
-            in inputs.items()
-        }
-
-        print(
-            "Running SAM inference..."
-        )
-
-        with torch.inference_mode():
-
-            outputs = sam_model(
-                **inputs
-            )
-
-        print(
-            "Processing segmentation masks..."
-        )
-
-        masks = (
-            processor.image_processor
-            .post_process_masks(
-                outputs.pred_masks.cpu(),
-                inputs[
-                    "original_sizes"
-                ].cpu(),
-                inputs[
-                    "reshaped_input_sizes"
-                ].cpu()
-            )
-        )
-
-        predicted_masks = (
-            masks[0]
-            .cpu()
-            .numpy()
-        )
-
-        predicted_masks = (
-            np.squeeze(
-                predicted_masks
-            )
-        )
-
-        scores = (
-            outputs.iou_scores
-            .detach()
-            .cpu()
-            .numpy()
-            .reshape(-1)
-        )
-
-        if predicted_masks.ndim == 2:
-
-            selected_mask = (
-                predicted_masks
-            )
-
-        else:
-
-            best_mask_index = int(
-                np.argmax(scores)
-            )
-
-            selected_mask = (
-                predicted_masks[
-                    best_mask_index
-                ]
-            )
-
-        RESULTS_FOLDER.mkdir(
-            parents=True,
-            exist_ok=True
-        )
-
-        print(
-            "Saving segmentation output..."
-        )
-
-        plt.figure(
-            figsize=(8, 8)
-        )
-
-        plt.imshow(
-            image
-        )
-
-        plt.imshow(
-            selected_mask,
-            alpha=0.5
-        )
-
-        plt.axis(
-            "off"
-        )
-
-        plt.title(
-            "SAM Image Segmentation"
-        )
-
-        plt.tight_layout()
-
-        plt.savefig(
-            SAM_OUTPUT_IMAGE,
-            bbox_inches="tight",
-            dpi=150
-        )
-
-        plt.close()
-
-        inference_time = (
-            time.perf_counter()
-            - start_time
-        )
-
-        message = (
-            "SAM segmentation completed successfully.\n"
-            f"Output: {SAM_OUTPUT_IMAGE}\n"
-            f"Execution time: "
-            f"{inference_time:.2f} seconds"
-        )
-
-        print(
-            "\n" + message
-        )
-
-        all_results.append(
-            {
-                "task":
-                    "9. SAM - IMAGE SEGMENTATION",
-
-                "model":
-                    sam_model_name,
-
-                "model_category":
-                    "Computer-Vision "
-                    "Segmentation Model",
-
-                "input":
-                    str(INPUT_IMAGE),
-
-                "original_image_size":
-                    str(original_size),
-
-                "processed_image_size":
-                    str(image.size),
-
-                "output":
-                    str(SAM_OUTPUT_IMAGE),
-
-                "response":
-                    message,
-
-                "inference_time_seconds":
-                    round(
-                        inference_time,
-                        2
-                    ),
-
-                "status":
-                    "Success",
-
-                "timestamp":
-                    datetime.now().isoformat(
-                        timespec="seconds"
-                    )
             }
+
         )
 
-        # Free model memory.
-        del outputs
-        del sam_model
 
-        if torch.cuda.is_available():
+        answer = get_response_content(
+            response
+        )
 
-            torch.cuda.empty_cache()
+
+        status = "Success"
+
 
     except Exception as error:
 
-        inference_time = (
-            time.perf_counter()
-            - start_time
-        )
+        answer = (
 
-        message = (
-            f"SAM inference failed: "
+            "VLM inference failed: "
+
             f"{type(error).__name__}: "
+
             f"{error}"
+
         )
 
-        print(
-            "\n" + message
-        )
 
-        all_results.append(
-            {
-                "task":
-                    "9. SAM - IMAGE SEGMENTATION",
+        status = "Failed"
 
-                "model":
-                    "facebook/sam-vit-base",
 
-                "model_category":
-                    "Computer-Vision "
-                    "Segmentation Model",
+    inference_time = (
 
-                "input":
-                    str(INPUT_IMAGE),
+        time.perf_counter()
 
-                "output":
-                    None,
+        - start_time
 
-                "response":
-                    message,
+    )
 
-                "inference_time_seconds":
-                    round(
-                        inference_time,
-                        2
-                    ),
 
-                "status":
-                    "Failed",
+    print(
+        "\nMODEL RESPONSE:\n"
+    )
 
-                "timestamp":
-                    datetime.now().isoformat(
-                        timespec="seconds"
-                    )
-            }
-        )
+    print(
+        answer
+    )
+
+
+    print(
+
+        "\nInference time: "
+
+        f"{inference_time:.2f} seconds"
+
+    )
+
+
+    all_results.append(
+
+        {
+
+            "task":
+                task_name,
+
+            "model_type":
+                model_type,
+
+            "model":
+                VLM_MODEL,
+
+            "input_image":
+                str(INPUT_IMAGE),
+
+            "prompt":
+                prompt,
+
+            "response":
+                answer,
+
+            "temperature":
+                0.3,
+
+            "maximum_output_tokens":
+                300,
+
+            "inference_time_seconds":
+
+                round(
+
+                    inference_time,
+
+                    2
+
+                ),
+
+            "status":
+                status,
+
+            "timestamp":
+
+                datetime.now().isoformat(
+
+                    timespec="seconds"
+
+                )
+
+        }
+
+    )
+
+
+    return answer
 
 
 # ============================================================
-# SAVE ALL RESULTS
+# SAVE RESULTS
 # ============================================================
 
 def save_results():
 
+    """
+    Saves all inference results
+    in JSON and TXT formats.
+    """
+
+
     RESULTS_FOLDER.mkdir(
+
         parents=True,
+
         exist_ok=True
+
     )
 
+
     with open(
+
         JSON_FILE,
+
         "w",
+
         encoding="utf-8"
+
     ) as file:
 
         json.dump(
+
             all_results,
+
             file,
+
             indent=4,
+
             ensure_ascii=False
+
         )
+
 
     with open(
+
         TEXT_FILE,
+
         "w",
+
         encoding="utf-8"
+
     ) as file:
 
-        file.write(
-            "AI MODEL INFERENCE "
-            "AND PROMPT ENGINEERING\n"
-        )
 
         file.write(
-            "=" * 75 + "\n"
+
+            "PROMPT ENGINEERING AND "
+
+            "MULTI-MODEL INFERENCE "
+
+            "USING OLLAMA\n"
+
         )
 
-        file.write(
-            "Student: "
-            "Eilene Anna Kuriakose\n"
-        )
 
         file.write(
-            f"Ollama model: "
-            f"{OLLAMA_MODEL}\n"
-        )
 
-        file.write(
-            "Generated: "
-            + datetime.now().strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
+            "=" * 75
+
             + "\n"
+
         )
+
+
+        file.write(
+
+            "Student: "
+
+            "Eilene Anna Kuriakose\n"
+
+        )
+
+
+        file.write(
+
+            "\nMODELS USED\n"
+
+        )
+
+
+        file.write(
+
+            f"LLM: {LLM_MODEL}\n"
+
+        )
+
+
+        file.write(
+
+            f"SLM: {SLM_MODEL}\n"
+
+        )
+
+
+        file.write(
+
+            f"VLM: {VLM_MODEL}\n"
+
+        )
+
+
+        file.write(
+
+            "\nGenerated: "
+
+            + datetime.now().strftime(
+
+                "%Y-%m-%d %H:%M:%S"
+
+            )
+
+            + "\n"
+
+        )
+
 
         for result in all_results:
 
+
             file.write(
+
                 "\n"
+
                 + "=" * 75
+
                 + "\n"
+
             )
 
-            file.write(
-                f"TASK:\n"
-                f"{result.get('task')}\n"
-            )
 
             file.write(
-                f"\nMODEL:\n"
-                f"{result.get('model')}\n"
+
+                "TASK:\n"
+
+                + str(
+
+                    result.get(
+                        "task"
+                    )
+
+                )
+
+                + "\n"
+
             )
 
+
             file.write(
-                f"\nSTATUS:\n"
-                f"{result.get('status')}\n"
+
+                "\nMODEL TYPE:\n"
+
+                + str(
+
+                    result.get(
+                        "model_type"
+                    )
+
+                )
+
+                + "\n"
+
             )
+
+
+            file.write(
+
+                "\nMODEL:\n"
+
+                + str(
+
+                    result.get(
+                        "model"
+                    )
+
+                )
+
+                + "\n"
+
+            )
+
+
+            file.write(
+
+                "\nSTATUS:\n"
+
+                + str(
+
+                    result.get(
+                        "status"
+                    )
+
+                )
+
+                + "\n"
+
+            )
+
+
+            if result.get(
+                "input_image"
+            ):
+
+
+                file.write(
+
+                    "\nINPUT IMAGE:\n"
+
+                    + str(
+
+                        result.get(
+                            "input_image"
+                        )
+
+                    )
+
+                    + "\n"
+
+                )
+
 
             if result.get(
                 "prompt"
             ):
 
+
                 file.write(
-                    f"\nPROMPT:\n"
-                    f"{result.get('prompt')}\n"
+
+                    "\nPROMPT:\n"
+
+                    + str(
+
+                        result.get(
+                            "prompt"
+                        )
+
+                    )
+
+                    + "\n"
+
                 )
 
+
             file.write(
-                f"\nRESPONSE:\n"
-                f"{result.get('response')}\n"
+
+                "\nRESPONSE:\n"
+
+                + str(
+
+                    result.get(
+                        "response"
+                    )
+
+                )
+
+                + "\n"
+
             )
+
+
+            if result.get(
+
+                "inference_time_seconds"
+
+            ) is not None:
+
+
+                file.write(
+
+                    "\nINFERENCE TIME:\n"
+
+                    + str(
+
+                        result.get(
+
+                            "inference_time_seconds"
+
+                        )
+
+                    )
+
+                    + " seconds\n"
+
+                )
+
 
     print_header(
         "RESULTS SAVED"
     )
 
-    print(
-        f"JSON results: "
-        f"{JSON_FILE}"
-    )
 
     print(
-        f"Text results: "
-        f"{TEXT_FILE}"
+
+        "JSON results: "
+
+        f"{JSON_FILE.relative_to(PROJECT_FOLDER)}"
+
+    )
+
+
+    print(
+
+        "Text results: "
+
+        f"{TEXT_FILE.relative_to(PROJECT_FOLDER)}"
+
     )
 
 
@@ -953,74 +1511,198 @@ def save_results():
 def main():
 
     print_header(
-        "AI MODEL INFERENCE "
-        "AND PROMPT ENGINEERING"
+
+        "PROMPT ENGINEERING AND "
+
+        "MULTI-MODEL INFERENCE"
+
     )
 
+
     print(
+
         "Student: "
+
         "Eilene Anna Kuriakose"
+
     )
 
-    print(
-        f"Ollama model: "
-        f"{OLLAMA_MODEL}"
-    )
 
     print(
-        "Started: "
+        "\nActual models used:"
+    )
+
+
+    print(
+
+        f"1. LLM: {LLM_MODEL}"
+
+    )
+
+
+    print(
+
+        f"2. SLM: {SLM_MODEL}"
+
+    )
+
+
+    print(
+
+        f"3. VLM: {VLM_MODEL}"
+
+    )
+
+
+    print(
+
+        "\nStarted: "
+
         + datetime.now().strftime(
+
             "%Y-%m-%d %H:%M:%S"
+
         )
+
     )
 
-    # Display locally installed Ollama models.
+
+    # Display locally installed
+    # Ollama models.
+
     list_installed_models()
 
-    # Prompt-engineering tasks.
+
+    # Prompt-engineering methods
+    # using Llama 3.2.
+
     zero_shot_prompting()
+
     one_shot_prompting()
+
     few_shot_prompting()
+
     chain_of_thought_prompting()
 
+
     # LLM inference tasks.
-    llm_next_text_generation()
-    llm_summarization()
+
+    llm_text_summarization()
+
     llm_question_answering()
 
-    # Concept-level processing task.
-    lcm_concept_task()
 
-    # Actual SAM image-segmentation task.
-    run_sam_segmentation()
+    # SLM inference tasks.
 
-    # Save all outputs.
+    slm_next_text_generation()
+
+    slm_short_text_summarization()
+
+
+    # VLM inference task.
+
+    vlm_image_understanding()
+
+
+    # Save all results.
+
     save_results()
+
 
     print_header(
         "ALL TASKS COMPLETED"
     )
 
+
     successful_tasks = sum(
+
         1
+
         for result in all_results
-        if result.get("status")
+
+        if result.get(
+            "status"
+        )
+
         == "Success"
+
     )
 
+
+    failed_tasks = sum(
+
+        1
+
+        for result in all_results
+
+        if result.get(
+            "status"
+        )
+
+        == "Failed"
+
+    )
+
+
     print(
-        f"Total recorded tasks: "
+
+        "Total inference tasks: "
+
         f"{len(all_results)}"
+
     )
 
+
     print(
-        f"Successful tasks: "
+
+        "Successful inference tasks: "
+
         f"{successful_tasks}"
+
     )
 
+
     print(
+
+        "Failed inference tasks: "
+
+        f"{failed_tasks}"
+
+    )
+
+
+    print(
+        "\nModels tested:"
+    )
+
+
+    print(
+
+        f"- LLM: {LLM_MODEL}"
+
+    )
+
+
+    print(
+
+        f"- SLM: {SLM_MODEL}"
+
+    )
+
+
+    print(
+
+        f"- VLM: {VLM_MODEL}"
+
+    )
+
+
+    print(
+
         "\nCheck the results folder "
-        "for all generated outputs."
+
+        "for the JSON and TXT outputs."
+
     )
 
 

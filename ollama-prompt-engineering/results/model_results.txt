@@ -1,13 +1,21 @@
-AI MODEL INFERENCE AND PROMPT ENGINEERING
+PROMPT ENGINEERING AND MULTI-MODEL INFERENCE USING OLLAMA
 ===========================================================================
 Student: Eilene Anna Kuriakose
-Ollama model: llama3.2
-Generated: 2026-07-12 22:54:01
+
+MODELS USED
+LLM: llama3.2
+SLM: qwen2.5:0.5b
+VLM: moondream
+
+Generated: 2026-07-13 13:39:35
 
 ===========================================================================
 TASK:
 1. ZERO-SHOT PROMPTING
 
+MODEL TYPE:
+LLM - Large Language Model
+
 MODEL:
 llama3.2
 
@@ -15,26 +23,29 @@ STATUS:
 Success
 
 PROMPT:
-
-
-Classify the sentiment of the following sentence
-as Positive, Negative, or Neutral.
+Classify the sentiment of the following
+sentence as Positive, Negative, or Neutral.
 
 Sentence:
 
-I really enjoy learning about artificial intelligence.
+I really enjoy learning about
+artificial intelligence.
 
 Return only the sentiment label.
 
-
-
 RESPONSE:
 Positive
+
+INFERENCE TIME:
+6.72 seconds
 
 ===========================================================================
 TASK:
 2. ONE-SHOT PROMPTING
 
+MODEL TYPE:
+LLM - Large Language Model
+
 MODEL:
 llama3.2
 
@@ -42,35 +53,41 @@ STATUS:
 Success
 
 PROMPT:
-
-
 Classify the sentiment by following
 the example.
+
 
 EXAMPLE:
 
 Input:
+
 The food was amazing.
 
 Output:
+
 Positive
 
 
 NOW CLASSIFY:
 
 Input:
+
 The movie was disappointing.
 
 Output:
 
-
-
 RESPONSE:
 Negative
+
+INFERENCE TIME:
+0.97 seconds
 
 ===========================================================================
 TASK:
 3. FEW-SHOT PROMPTING
+
+MODEL TYPE:
+LLM - Large Language Model
 
 MODEL:
 llama3.2
@@ -79,54 +96,63 @@ STATUS:
 Success
 
 PROMPT:
-
-
 Classify the sentiment by following
 the examples.
 
 
-EXAMPLE 1
+EXAMPLE 1:
 
 Input:
+
 The weather is wonderful.
 
 Output:
+
 Positive
 
 
-EXAMPLE 2
+EXAMPLE 2:
 
 Input:
+
 The service was terrible.
 
 Output:
+
 Negative
 
 
-EXAMPLE 3
+EXAMPLE 3:
 
 Input:
+
 The parcel arrived on Monday.
 
 Output:
+
 Neutral
 
 
 NOW CLASSIFY:
 
 Input:
+
 This phone has an excellent camera.
 
 Output:
 
-
-
 RESPONSE:
 Positive
+
+INFERENCE TIME:
+1.47 seconds
 
 ===========================================================================
 TASK:
 4. CHAIN-OF-THOUGHT PROMPTING
+
+MODEL TYPE:
+LLM - Large Language Model
 
 MODEL:
 llama3.2
@@ -135,8 +161,6 @@ STATUS:
 Success
 
 PROMPT:
-
-
 Solve the following problem carefully.
 
 Show the important calculation steps
@@ -148,36 +172,46 @@ The bat costs $1 more than the ball.
 
 How much does the ball cost?
 
-
-
 RESPONSE:
-To solve this problem, we can use algebraic equations to represent the relationships between the cost of the bat and the cost of the ball.
+Let's break down the problem step by step:
 
-Let's say the cost of the ball is x dollars.
+Step 1: Define variables
+Let x be the cost of the ball.
+Since the bat costs $1 more than the ball, let y = x + $1 be the cost of the bat.
 
-Since the bat costs $1 more than the ball, the cost of the bat can be represented as (x + 1) dollars.
+Step 2: Set up the equation
+The total cost of the bat and the ball is $1.10:
+x (cost of the ball) + y (cost of the bat) = $1.10
 
-We know that the total cost of both the bat and the ball is $1.10, so we can set up an equation:
+Substitute y = x + $1 into the equation:
+x + (x + $1) = $1.10
 
-x + (x + 1) = 1.10
+Step 3: Simplify the equation
+Combine like terms:
+2x + $1 = $1.10
 
-Now, let's simplify the equation by combining like terms:
+Step 4: Solve for x
+Subtract $1 from both sides of the equation:
+2x = $0.10
 
-2x + 1 = 1.10
+Divide both sides by 2:
+x = $0.05
 
-Subtracting 1 from both sides of the equation gives us:
+So, the ball costs $0.05 (or 5 cents).
 
-2x = 0.10
+Therefore, the final answer is:
 
-Dividing both sides by 2 to solve for x gives us:
+The ball costs $0.05
 
-x = 0.05
-
-Therefore, the ball costs $0.05 or 5 cents.
+INFERENCE TIME:
+14.29 seconds
 
 ===========================================================================
 TASK:
-5. LLM - NEXT-TEXT GENERATION
+5. LLM - TEXT SUMMARIZATION
+
+MODEL TYPE:
+LLM - Large Language Model
 
 MODEL:
 llama3.2
@@ -186,37 +220,6 @@ STATUS:
 Success
 
 PROMPT:
-
-
-Continue the following incomplete sentence
-naturally.
-
-Write only one additional sentence.
-
-In the future,
-artificial intelligence will
-
-
-
-RESPONSE:
-Here are the completed sentences:
-
-1. Naturally, humans will need to reevaluate their relationship with technology and consider a harmonious coexistence that prioritizes mutual benefits.
-2. In the future, artificial intelligence will seamlessly integrate into our daily lives, revolutionizing industries such as healthcare, finance, and education, while also presenting unprecedented opportunities for innovation and growth.
-
-===========================================================================
-TASK:
-6. LLM - TEXT SUMMARIZATION
-
-MODEL:
-llama3.2
-
-STATUS:
-Success
-
-PROMPT:
-
-
 Summarize the following passage
 in exactly two sentences.
 
@@ -242,16 +245,20 @@ importance of human supervision.
 
 SUMMARY:
 
-
-
 RESPONSE:
 Here is a two-sentence summary of the passage:
 
-Artificial intelligence (AI) is revolutionizing healthcare by assisting doctors in analyzing medical images, identifying diseases earlier, and creating personalized treatment plans. However, AI also raises important concerns such as patient privacy, data security, algorithmic fairness, and the need for human supervision to ensure its effective and responsible use.
+Artificial intelligence is revolutionizing healthcare by assisting doctors in analyzing medical images, identifying diseases earlier, and creating personalized treatment plans. However, the use of AI in healthcare also raises important considerations such as patient privacy, data security, algorithmic fairness, and human supervision to ensure effective and ethical implementation.
+
+INFERENCE TIME:
+7.64 seconds
 
 ===========================================================================
 TASK:
-7. LLM - QUESTION ANSWERING
+6. LLM - QUESTION ANSWERING
+
+MODEL TYPE:
+LLM - Large Language Model
 
 MODEL:
 llama3.2
@@ -260,8 +267,6 @@ STATUS:
 Success
 
 PROMPT:
-
-
 Answer the following question
 clearly in three sentences.
 
@@ -269,85 +274,91 @@ What is the difference between
 artificial intelligence
 and machine learning?
 
-
-
 RESPONSE:
-Artificial intelligence (AI) refers to the broader field of research and development aimed at creating intelligent machines that can perform tasks that typically require human intelligence, such as reasoning, problem-solving, and perception. Machine learning (ML), on the other hand, is a subset of AI that focuses specifically on enabling machines to learn from data without being explicitly programmed, allowing them to improve their performance over time through experience. In essence, all machine learning is AI, but not all AI involves machine learning.
+Artificial Intelligence (AI) refers to the broader field of research and development aimed at creating machines that can perform tasks that typically require human intelligence, such as reasoning, problem-solving, and knowledge representation. Machine Learning (ML), on the other hand, is a subset of AI that focuses specifically on developing algorithms and statistical models that enable machines to learn from data, improve their performance over time, and make decisions without being explicitly programmed. In essence, all machine learning is artificial intelligence, but not all artificial intelligence involves machine learning.
+
+INFERENCE TIME:
+7.49 seconds
 
 ===========================================================================
 TASK:
-8. LCM-STYLE CONCEPT-LEVEL TASK
+7. SLM - NEXT-TEXT GENERATION
+
+MODEL TYPE:
+SLM - Small Language Model
 
 MODEL:
-llama3.2
+qwen2.5:0.5b
 
 STATUS:
 Success
 
 PROMPT:
+Complete the following sentence naturally.
 
+Return only one completed sentence.
 
-Read the following paragraph.
-
-Do not merely shorten individual sentences.
-
-Identify the main high-level concepts,
-group related ideas together,
-and produce a concept-level summary.
-
-TEXT:
-
-Artificial intelligence is increasingly
-used in hospitals, schools, businesses,
-transport systems, and scientific research.
-
-It can improve efficiency, automate
-repetitive work, support decision-making,
-and help people analyze large amounts
-of information.
-
-However, the use of AI may create
-challenges involving privacy, bias,
-employment, accountability, and safety.
-
-TASK:
-
-Return:
-
-1. Three major concepts
-
-2. One relationship between the concepts
-
-3. A two-sentence conceptual summary
-
-
+In the future,
+artificial intelligence will
 
 RESPONSE:
-Here are the requested answers:
+be able to not only understand language and solve complex problems but also make predictions and generate innovative ideas.
 
-**Three Major Concepts:**
-
-1. Artificial Intelligence (AI)
-2. Benefits of AI
-3. Challenges of AI
-
-**Relationship Between the Concepts:** The benefits of AI are often counterbalanced by challenges, as the use of AI in various fields can lead to issues such as privacy concerns and employment impacts.
-
-**Two-Sentence Conceptual Summary:**
-
-Artificial intelligence is a rapidly expanding technology that offers numerous benefits, including improved efficiency and decision-making support. However, its increasing use also raises significant challenges, including concerns over privacy, bias, employment, accountability, and safety, which must be carefully addressed to ensure responsible AI development and deployment.
+INFERENCE TIME:
+2.18 seconds
 
 ===========================================================================
 TASK:
-9. SAM - Image Segmentation
+8. SLM - SHORT-TEXT SUMMARIZATION
+
+MODEL TYPE:
+SLM - Small Language Model
 
 MODEL:
-SAM
+qwen2.5:0.5b
 
 STATUS:
-Skipped - input image missing
+Success
+
+PROMPT:
+Summarize the following text
+in one sentence.
+
+Machine learning allows computer systems
+to identify patterns in data and improve
+their performance without being explicitly
+programmed for every possible situation.
+
+Return only the summary.
 
 RESPONSE:
-SAM was not executed because 'input_image.jpg' was not found.
+Machine learning enables computers to recognize and apply general rules to solve problems, making them more adaptable and efficient.
 
-Place an image named 'input_image.jpg' inside the project folder and run the program again.
+INFERENCE TIME:
+0.81 seconds
+
+===========================================================================
+TASK:
+9. VLM - IMAGE UNDERSTANDING
+
+MODEL TYPE:
+VLM - Vision-Language Model
+
+MODEL:
+moondream
+
+STATUS:
+Success
+
+INPUT IMAGE:
+C:\Users\EileneAnnaKuriakose\Desktop\AI-TASKS\ollama-prompt-engineering\test_image.jpg
+
+PROMPT:
+Describe the main subject and important visible details in this image. Answer in three clear sentences.
+
+RESPONSE:
+
+A ginger cat with white paws is lying on a wooden bench, facing the camera with its eyes open. The cat's fur is a mix of orange and white colors, and it has two ears perked up. In the background, there are yellow flowers that add to the vibrant outdoor setting.
+
+INFERENCE TIME:
+24.63 seconds
