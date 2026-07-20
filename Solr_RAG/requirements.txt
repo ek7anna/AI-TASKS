@@ -1,0 +1,6 @@
+pysolr
+sentence-transformers
+langchain
+langchain-community
+pypdf
+ollama
