@@ -1,0 +1,50 @@
+Q#,Question,Retrieved Context,Generated Answer,Reference Answer,Faithfulness,Context Precision,Context Recall,Answer Relevancy,Mean RAGAS Score
+1,What is ChromaDB and how is it used in the project?,"Both PostgreSQL and Solr pipelines index the same source document ( sample.pdf — an ""HSE Dashboard Project Plan""), and the ChromaDB notebook lets the user upload any PDF interactively.
+On real vs. illustrative outputs: the PostgreSQL notebook (Part 3) was executed in Colab with its outputs saved in ","ChromaDB appears to be a library used for building vector stores. In the context of the project, ChromaDB is utilized within the Google Colab notebook (Cell 7) to create a Chroma vector store after loading an embedding model successfully. This store holds embeddings in memory and does not persist data to disk due to the absence of the `persist_directory` argument.",ChromaDB is a vector database used to build an in-memory vector store that allows users to upload a PDF interactively and perform similarity search without requiring an external database server.,1.0,1.0,0.8,0.773,0.893
+2,What embedding model is used for generating dense vectors in this pipeline?,"RAG Systems Documentation
+PostgreSQL + pgvector · Apache Solr · ChromaDB
+This document explains, line by line, three diﬀerent Retrieval-Augmented Generation (RAG) implementations built from a PDF document. All three follow the same core pattern — load PDF → split into chunks → embed chunks → store v","embedding = Column(Vector(384)) suggests that the Vector class from the RAG Systems Documentation is being used as the embedding model, with a specific dimension of 384.",The pipeline uses sentence-transformers/all-MiniLM-L6-v2 via LangChain's HuggingFaceEmbeddings to generate 384-dimensional dense vectors.,1.0,1.0,0.0,0.38,0.595
+3,How is Apache Solr queried for vector search in rag_chain.py?,"rag_pipeline.py (Postgres) and ingest.py (Solr) actually being executed against sample.pdf on their own machine. Wherever a real captured output exists — from the notebook ﬁle or from a screenshot — it is shown below labeled ""Actual captured output."" Anything not actually run (e.g. schema_setup.py ,","Based on the provided context, specifically the `search` function in `schema_setup.py`, a query to Apache Solr for vector search in `rag_chain.py` can be performed by calling the `solr.search()` method with the following parameters:
+
+*   The `query_embedding` parameter, which is an array of floating-point numbers representing the query embedding.
+*   The `top_k` parameter, which specifies the number of top results to return (default value is 3).
+
+The exact query string can be constructed using a Solr KNN template, as shown in the code snippet:
+
+```
+""fq"": ""{!knn f=embedding topK=%d}[%s]"" % (top_k, embedding_str)
+```
+
+Where `embedding` is the name of the vector field added to the Solr schema by `schema_setup.py`, and `topK` is the specified number of results to return.
+
+The full query function call from `search()` in `schema_setup.py` would be:
+
+```python
+results = solr.search(""*:*"",
+    **{
+        ""rows"": top_k,
+        ""fl"": ""id,content,score"",
+        ""fq"": ""{!knn f=embedding topK=%d}[%s]"" % (top_k, embedding_str)
+    }
+)
+```
+
+This query searches for documents in the Solr index that have a similar embedding to the `query_embedding` within the specified `topK` results.",Apache Solr is queried using a k-nearest-neighbor filter {!knn f=embedding topK=5} passed via the fq parameter in pysolr to retrieve the top 5 closest chunk vectors.,1.0,1.0,1.0,0.918,0.979
+4,What happens if a user types a generic greeting like 'hey'?,"RAG Answer Function | def ask_rag(question):
+context = retrieve_context(question) prompt = f""""""
+You are a helpful AI assistant.
+
+Answer ONLY using the context below. If the answer is not found, say:
+""I couldn't find the answer in the document.""
+
+Context:
+{context}
+
+Question:
+{question} """"""
+
+
+message",I couldn't find the answer in the provided document.,"When a generic greeting like 'hey' is typed, Solr KNN still returns top-K nearest chunks, but since none contain an answer to 'hey', the LLM prompt instructs it to fall back to 'I couldn't find the answer in the provided document.'",1.0,1.0,0.0,0.0,0.5
+5,Give some examples of incident management features in the HSE Management System.,"To summarize:
+
+The module contains various features for managing and tracking incidents, including creating, editing, viewing, deleting, changing status, and assigning tasks to specific individuals. Additionally, it includes an incident trend chart and dashboard usage metrics such as total incidents","The module includes features for creating, editing, viewing, deleting, and changing the status of incidents. Additionally, it allows assigning tasks to specific individuals and provides an incident trend chart and dashboard usage metrics such as total incidents, open incidents, investigations, and days since last incident.","Examples of incident management features include creating, editing, viewing, deleting, changing status, and assigning tasks to specific individuals, as well as an incident trend chart and dashboard usage metrics.",1.0,0.887,1.0,0.717,0.901

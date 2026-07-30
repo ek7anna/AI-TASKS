@@ -1,0 +1,71 @@
+{
+  "results": [
+    {
+      "Q#": 1,
+      "Question": "What is ChromaDB and how is it used in the project?",
+      "Retrieved Context": "Both PostgreSQL and Solr pipelines index the same source document ( sample.pdf \u2014 an \"HSE Dashboard Project Plan\"), and the ChromaDB notebook lets the user upload any PDF interactively.\nOn real vs. illustrative outputs: the PostgreSQL notebook (Part 3) was executed in Colab with its outputs saved in ",
+      "Generated Answer": "ChromaDB appears to be a library used for building vector stores. In the context of the project, ChromaDB is utilized within the Google Colab notebook (Cell 7) to create a Chroma vector store after loading an embedding model successfully. This store holds embeddings in memory and does not persist data to disk due to the absence of the `persist_directory` argument.",
+      "Reference Answer": "ChromaDB is a vector database used to build an in-memory vector store that allows users to upload a PDF interactively and perform similarity search without requiring an external database server.",
+      "Faithfulness": 1.0,
+      "Context Precision": 1.0,
+      "Context Recall": 0.8,
+      "Answer Relevancy": 0.773,
+      "Mean RAGAS Score": 0.893
+    },
+    {
+      "Q#": 2,
+      "Question": "What embedding model is used for generating dense vectors in this pipeline?",
+      "Retrieved Context": "RAG Systems Documentation\nPostgreSQL + pgvector \u00b7 Apache Solr \u00b7 ChromaDB\nThis document explains, line by line, three di\ufb00erent Retrieval-Augmented Generation (RAG) implementations built from a PDF document. All three follow the same core pattern \u2014 load PDF \u2192 split into chunks \u2192 embed chunks \u2192 store v",
+      "Generated Answer": "embedding = Column(Vector(384)) suggests that the Vector class from the RAG Systems Documentation is being used as the embedding model, with a specific dimension of 384.",
+      "Reference Answer": "The pipeline uses sentence-transformers/all-MiniLM-L6-v2 via LangChain's HuggingFaceEmbeddings to generate 384-dimensional dense vectors.",
+      "Faithfulness": 1.0,
+      "Context Precision": 1.0,
+      "Context Recall": 0.0,
+      "Answer Relevancy": 0.38,
+      "Mean RAGAS Score": 0.595
+    },
+    {
+      "Q#": 3,
+      "Question": "How is Apache Solr queried for vector search in rag_chain.py?",
+      "Retrieved Context": "rag_pipeline.py (Postgres) and ingest.py (Solr) actually being executed against sample.pdf on their own machine. Wherever a real captured output exists \u2014 from the notebook \ufb01le or from a screenshot \u2014 it is shown below labeled \"Actual captured output.\" Anything not actually run (e.g. schema_setup.py ,",
+      "Generated Answer": "Based on the provided context, specifically the `search` function in `schema_setup.py`, a query to Apache Solr for vector search in `rag_chain.py` can be performed by calling the `solr.search()` method with the following parameters:\n\n*   The `query_embedding` parameter, which is an array of floating-point numbers representing the query embedding.\n*   The `top_k` parameter, which specifies the number of top results to return (default value is 3).\n\nThe exact query string can be constructed using a Solr KNN template, as shown in the code snippet:\n\n```\n\"fq\": \"{!knn f=embedding topK=%d}[%s]\" % (top_k, embedding_str)\n```\n\nWhere `embedding` is the name of the vector field added to the Solr schema by `schema_setup.py`, and `topK` is the specified number of results to return.\n\nThe full query function call from `search()` in `schema_setup.py` would be:\n\n```python\nresults = solr.search(\"*:*\",\n    **{\n        \"rows\": top_k,\n        \"fl\": \"id,content,score\",\n        \"fq\": \"{!knn f=embedding topK=%d}[%s]\" % (top_k, embedding_str)\n    }\n)\n```\n\nThis query searches for documents in the Solr index that have a similar embedding to the `query_embedding` within the specified `topK` results.",
+      "Reference Answer": "Apache Solr is queried using a k-nearest-neighbor filter {!knn f=embedding topK=5} passed via the fq parameter in pysolr to retrieve the top 5 closest chunk vectors.",
+      "Faithfulness": 1.0,
+      "Context Precision": 1.0,
+      "Context Recall": 1.0,
+      "Answer Relevancy": 0.918,
+      "Mean RAGAS Score": 0.979
+    },
+    {
+      "Q#": 4,
+      "Question": "What happens if a user types a generic greeting like 'hey'?",
+      "Retrieved Context": "RAG Answer Function | def ask_rag(question):\ncontext = retrieve_context(question) prompt = f\"\"\"\nYou are a helpful AI assistant.\n\nAnswer ONLY using the context below. If the answer is not found, say:\n\"I couldn't find the answer in the document.\"\n\nContext:\n{context}\n\nQuestion:\n{question} \"\"\"\n\n\nmessage",
+      "Generated Answer": "I couldn't find the answer in the provided document.",
+      "Reference Answer": "When a generic greeting like 'hey' is typed, Solr KNN still returns top-K nearest chunks, but since none contain an answer to 'hey', the LLM prompt instructs it to fall back to 'I couldn't find the answer in the provided document.'",
+      "Faithfulness": 1.0,
+      "Context Precision": 1.0,
+      "Context Recall": 0.0,
+      "Answer Relevancy": 0.0,
+      "Mean RAGAS Score": 0.5
+    },
+    {
+      "Q#": 5,
+      "Question": "Give some examples of incident management features in the HSE Management System.",
+      "Retrieved Context": "To summarize:\n\nThe module contains various features for managing and tracking incidents, including creating, editing, viewing, deleting, changing status, and assigning tasks to specific individuals. Additionally, it includes an incident trend chart and dashboard usage metrics such as total incidents",
+      "Generated Answer": "The module includes features for creating, editing, viewing, deleting, and changing the status of incidents. Additionally, it allows assigning tasks to specific individuals and provides an incident trend chart and dashboard usage metrics such as total incidents, open incidents, investigations, and days since last incident.",
+      "Reference Answer": "Examples of incident management features include creating, editing, viewing, deleting, changing status, and assigning tasks to specific individuals, as well as an incident trend chart and dashboard usage metrics.",
+      "Faithfulness": 1.0,
+      "Context Precision": 0.887,
+      "Context Recall": 1.0,
+      "Answer Relevancy": 0.717,
+      "Mean RAGAS Score": 0.901
+    }
+  ],
+  "summary": {
+    "faithfulness": 1.0,
+    "context_precision": 0.977,
+    "context_recall": 0.56,
+    "answer_relevancy": 0.558,
+    "Overall RAGAS Score": 0.774
+  }
+}
